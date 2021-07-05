@@ -1,4 +1,4 @@
-package labs.lab4.lab2;
+package labs.lab4;
 
 import java.math.BigDecimal;
 

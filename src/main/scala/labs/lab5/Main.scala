@@ -1,15 +1,5 @@
 package labs.lab5
 
-import scala.collection.SeqView.Sorted
-
-// Побудувати шаблонну функцію відповідно варіанту.
-//Передбачити тестовий приклад для ілюстрації коректності роботи, у якому
-//реалізувати усе, необхідне для демонстрації двох або трьох викликів функції.
-//Перший виклик функції реалізувати для одного з вбудованих типів.
-//Другий – для одного з реалізованих у попередніх роботах класів вашого
-//варіанту (якщо номер варіанту попередніх робіт не співпадає з номером
-//варіанту п’ятої роботи).
-//Третій виклик – з використанням явного інстанціювання.
 object Main extends App {
   class A {
     override def toString: String = this.getClass.getSimpleName
@@ -39,15 +29,56 @@ object Main extends App {
   case class Covariant[+T](t: T)
   case class Contravariant[-T]() { def printAsConsume: T => Unit = println(_) }
 
+  // covariant explain by compiler
+  // yes, 'list' of B(C) is also a 'list' of A
+  val _: Covariant[A] = new Covariant[A](c)
+  val _: Covariant[A] = new Covariant[B](c)
+  val _: Covariant[A] = new Covariant[C](c)
+
+  // invariant explain by compiler
+  // not, 'list' of B(C) is not also a 'list' of A
+  val _: Invariant[A] = new Invariant[A](c)
+  val _: Invariant[B] = new Invariant[B](b)
+//  val _ : Invariant[A] = new Invariant[B](c) // found   : labs.lab5.Main.Invariant[labs.lab5.Main.A], required: labs.lab5.Main.Invariant[labs.lab5.Main.B]
+//  val _ : Invariant[A] = new Invariant[C](c) // found   : labs.lab5.Main.Invariant[labs.lab5.Main.A], required: labs.lab5.Main.Invariant[labs.lab5.Main.C]
+
+  // contravariant explain by compiler
+  // no, 'list' of B(C) is not also a 'list' of A
+  // this is backwards, 'list' of A(B) is also a 'list' of C
+  val _: Contravariant[A] = new Contravariant[A]()
+  val _: Contravariant[A] = new Contravariant[B]()
+  val _: Contravariant[A] = new Contravariant[C]()
+  val _: Contravariant[C] = new Contravariant[A]()
+  val _: Contravariant[C] = new Contravariant[B]()
+  val _: Contravariant[C] = new Contravariant[C]()
+
+  // how this Contravariant works and why it exists
+  // клініка яка вміє лікувати Animal (A)
+  class Vet[-T <: A] {
+    def heal(t: T): Boolean = true
+  }
+  val clinic: Vet[B] = new Vet[A]
+//  clinic.heal(a)
+  clinic.heal(b)
+  clinic.heal(c)
+
+  // small compiler example for covariant and lower type bounds
+  abstract class MyList[+T] {
+    def head: T
+    def tail: MyList[T]
+//    def add(t: T): MyList[T] // covariant type T occurs in contravariant position in type T of value t
+    def add[T1 >: T](t: T1): MyList[T]
+  }
+
   println("------ invariant B demo ------")
   def printInvariantB(t: Invariant[B]): Unit = println(t.t)
-  //  myPrint2(Invariant[A](a)) // not compiled, only B
+//  printInvariantB(Invariant[A](a)) // not compiled, only B
   printInvariantB(Invariant[B](b))
-  //  myPrint2(Invariant[C](c)) // not compiled, only B
+//  printInvariantB(Invariant[C](c)) // not compiled, only B
 
   println("------ covariant B demo ------")
   def printCovariantB(t: Covariant[B]): Unit = println(t.t)
-  //  myPrint3(Covariant[A](a)) // not compiled, only B and C
+//  printCovariantB(Covariant[A](a)) // not compiled, only B and C
   printCovariantB(Covariant[B](b))
   printCovariantB(Covariant[C](c))
 
